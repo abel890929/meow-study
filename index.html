@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026-11-14.1">
+<meta name="app-version" content="2026-11-14.2">
 <title>喵學堂：養貓學語言</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
@@ -1865,7 +1865,7 @@ function voiceCheckCard(){
   loadVoices();
   const rows=Object.keys(LANGS).map(l=>{const v=voiceFor(LANGS[l].voice);const st=!window.speechSynthesis?"✗ 不支援":!VOICES.length?"？ 還在讀取":v?"✓ "+esc(v.name):"✗ 沒有安裝";
     return `<div class="row between" style="padding:8px 0;border-top:1px solid var(--line)"><span><b>${LANGS[l].name}</b> <span class="muted small">${st}</span></span><button class="chip" data-act="vtest" data-k="${l}">🔊 測試</button></div>`}).join("");
-  return `<div class="card"><h2>🔊 發音檢查</h2><p class="muted" style="margin:0 0 6px">按「測試」聽聽看。沒有聲音的話，畫面會告訴你怎麼在手機下載語音。</p>${rows}</div>`;
+  return `<div class="card"><h2>🔊 發音檢查</h2><p class="muted" style="margin:0 0 6px">按「測試」聽聽看。沒有聲音的話，畫面會告訴你怎麼在手機下載語音。</p>${rows}</div>`+`<p class="muted small" style="text-align:center">版本 ${(document.querySelector('meta[name="app-version"]')||{}).content||""}</p>`;
 }
 
 /* ===================== DATES ===================== */
