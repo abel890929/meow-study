@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026-11-14.3">
-<title>喵學堂：養貓學語言</title>
+<meta name="app-version" content="2026-11-15.1">
+<title>喵學堂：養寵物學語言</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
 <style>
@@ -166,6 +166,11 @@ ul.tips{margin:8px 0 0;padding-left:22px}
 .modal{position:fixed;inset:0;background:rgba(20,20,30,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .modal .sheet{background:var(--card);border-radius:24px 24px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom));max-width:640px;width:100%;max-height:88vh;overflow:auto}
 .modal .exp{margin-bottom:10px}
+.sppick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.spbtn{border:2px solid var(--line);background:var(--card);border-radius:16px;padding:6px 4px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;line-height:1.3}
+.spbtn b{font-size:.95rem}
+.spbtn small{font-size:.75rem;color:var(--muted)}
+.spbtn.on{border-color:var(--accent);background:var(--accent-soft)}
 .wrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .wrow:last-child{border-bottom:0}
 .wrow .wt{flex:1;min-width:0}
@@ -1897,7 +1902,20 @@ const SECTIONS={
   ja:[{k:"letters",ic:"あ",l:"五十音",kind:"deck"},{k:"vocab",ic:"🔤",l:"單字",kind:"deck"},{k:"grammar",ic:"✏️",l:"句型",kind:"mcq"},{k:"reading",ic:"📖",l:"閱讀",kind:"reading"}],
   ko:[{k:"letters",ic:"한",l:"字母",kind:"deck"},{k:"vocab",ic:"🔤",l:"單字",kind:"deck"},{k:"grammar",ic:"✏️",l:"句型",kind:"mcq"},{k:"reading",ic:"📖",l:"閱讀",kind:"reading"}]
 };
-const STAGES=[{n:"小奶貓",at:0},{n:"幼貓",at:30},{n:"少年貓",at:100},{n:"成貓",at:250},{n:"貓大王",at:500}];
+const STAGES=[{at:0},{at:30},{at:100},{at:250},{at:500}];
+const SPECIES={
+  cat:{n:"貓咪",ic:"🐱",snd:"喵",food:"魚",fe:"🐟",unit:"條",star:"喵星",def:"小橘",act:"呼嚕呼嚕…",st:["小奶貓","幼貓","少年貓","成貓","貓大王"],c:{main:"#f4a259",dark:"#d9772b",cream:"#fff4e2",inner:"#f6a5b8"},ear:"cat",tail:"long",stripes:true,whiskers:true},
+  dog:{n:"小狗",ic:"🐶",snd:"汪",food:"骨頭",fe:"🦴",unit:"根",star:"汪星",def:"小黃",act:"（瘋狂搖尾巴）",st:["小奶狗","幼犬","少年狗","成犬","狗狗大王"],c:{main:"#d9a066",dark:"#8b5a2b",cream:"#fbefdf",inner:"#e7b893"},ear:"floppy",tail:"short",darkNose:true},
+  rabbit:{n:"兔子",ic:"🐰",snd:"噗",food:"紅蘿蔔",fe:"🥕",unit:"根",star:"兔星",def:"小白",act:"（耳朵抖抖）",st:["小兔寶寶","幼兔","少年兔","成兔","兔兔大王"],c:{main:"#ffffff",dark:"#d8d0c7",cream:"#fff6f8",inner:"#f9b9c8"},ear:"long",tail:"puff",outline:true,whiskers:true,teeth:true},
+  bear:{n:"熊熊",ic:"🐻",snd:"嗷",food:"蜂蜜",fe:"🍯",unit:"罐",star:"熊星",def:"熊熊",act:"（抱著蜂蜜罐）",st:["小熊寶寶","幼熊","少年熊","成熊","熊熊大王"],c:{main:"#a8754a",dark:"#6e4528",cream:"#ecd3b2",inner:"#c99a73"},ear:"round",tail:"puff",darkNose:true},
+  panda:{n:"熊貓",ic:"🐼",snd:"嚶",food:"竹子",fe:"🎋",unit:"根",star:"熊貓星",def:"圓仔",act:"（抱著竹子滾來滾去）",st:["熊貓寶寶","幼年熊貓","少年熊貓","成年熊貓","熊貓大王"],c:{main:"#ffffff",dark:"#2f2f35",cream:"#ffffff",inner:"#2f2f35"},ear:"round",tail:"puff",panda:true,darkNose:true,outline:true},
+  hamster:{n:"倉鼠",ic:"🐹",snd:"吱",food:"瓜子",fe:"🌻",unit:"顆",star:"鼠星",def:"麻糬",act:"（把臉頰塞得滿滿的）",st:["倉鼠寶寶","幼鼠","少年鼠","成鼠","倉鼠大王"],c:{main:"#f2c37e",dark:"#d99a4e",cream:"#fff7ea",inner:"#f6a5b8"},ear:"smallround",tail:"none",cheeks:true,whiskers:true}
+};
+let pendingSp="cat", swapOpen=false, adoptNameDraft=null;
+const curSpKey=()=>(CAT&&CAT.sp&&SPECIES[CAT.sp])?CAT.sp:(CAT?"cat":pendingSp);
+const SP=()=>SPECIES[curSpKey()];
+const stName=i=>SP().st[i];
+const foodN=()=>SP().unit+SP().food;
 const GOAL_OPTS=[5,10,15,20];
 
 /* ===================== STORAGE / STATE ===================== */
@@ -1958,7 +1976,7 @@ function showVoiceHelp(lg,why){
   <div class="exp"><b>iPhone / iPad</b>設定 → 輔助使用 → 朗讀內容 → 聲音 → 選「${name}」→ 下載一個聲音（例如 ${ex}）。下載完把網頁關掉再重新打開。</div>
   <div class="exp"><b>Android</b>設定 → 搜尋「文字轉語音」→ 偏好的引擎選「Google 語音服務」→ 點齒輪 ⚙ → 安裝語音資料 → 下載「${name}」。Samsung 手機也請把引擎改成 Google。</div>
   <div class="exp"><b>電腦</b>建議用 Microsoft Edge，內建日文、韓文語音。Windows 也可以到 設定 → 時間與語言 → 語音 → 新增語音。</div>
-  <p class="muted small">各品牌、版本的選單名稱可能略有不同。設定好之後，可以到「貓咪」頁最下面的「發音檢查」測試。</p>
+  <p class="muted small">各品牌、版本的選單名稱可能略有不同。設定好之後，可以到「寵物」頁最下面的「發音檢查」測試。</p>
   <button class="btn" data-close="1">知道了</button></div>`;
   m.addEventListener("click",e=>{if(e.target===m||e.target.dataset.close)m.remove()});
   document.querySelectorAll(".modal").forEach(x=>x.remove()); document.body.appendChild(m);
@@ -1985,15 +2003,15 @@ function evalCat(){
   while(d<t){
     if((FED[d]||0)>=GOALN){CAT.miss=0;CAT.streak=(CAT.streak||0)+1}
     else{CAT.miss=(CAT.miss||0)+1;CAT.streak=0;
-      if(CAT.miss>=2){CAT.dead=true;CAT.diedOn=d;CATS.push({name:CAT.name,days:daysBetween(CAT.born,d)+1,food:CAT.food,stage:STAGES[stageOf(CAT.food)].n});changed=true;break}}
+      if(CAT.miss>=2){CAT.dead=true;CAT.diedOn=d;CATS.push({name:CAT.name,ic:SP().ic,days:daysBetween(CAT.born,d)+1,food:CAT.food,unit:foodN(),stage:stName(stageOf(CAT.food))});changed=true;break}}
     CAT.checked=d; d=addDays(d,1); changed=true;
   }
   if(changed) saveCat();
 }
 function adopt(name){
-  const t=today();
-  CAT={name:(name||"小橘").slice(0,10),born:t,food:0,checked:t,miss:0,streak:0,dead:false};
-  saveCat(); petLine="喵～你好！答對題目就能餵我吃魚喔 🐟";
+  const t=today(), sp=SPECIES[pendingSp];
+  CAT={name:(name||sp.def).slice(0,10),sp:pendingSp,born:t,food:0,checked:t,miss:0,streak:0,dead:false};
+  saveCat(); adoptNameDraft=null; petLine=`${sp.snd}～你好！答對題目就能餵我吃${sp.food}喔 ${sp.fe}`;
 }
 function mood(){
   if(!CAT) return "happy";
@@ -2004,54 +2022,72 @@ function mood(){
 }
 function feed(n){
   if(!n) return;
-  if(!CAT){toast("先去「貓咪」頁領養一隻小貓，答對就能餵牠 🐟");return}
-  if(CAT.dead){toast("貓咪回喵星了…去「貓咪」頁領養新的小貓吧");return}
+  if(!CAT){toast("先去「寵物」頁領養一隻寵物，答對就能餵牠 🐾");return}
+  if(CAT.dead){toast(`${CAT.name} 回${SP().star}了…去「寵物」頁領養新的寵物吧`);return}
   const t=today(), before=FED[t]||0, s0=stageOf(CAT.food);
   FED[t]=before+n; CAT.food+=n; saveCat(); pendingFly+=n;
   const s1=stageOf(CAT.food);
-  if(s1>s0) setTimeout(()=>toast(`🎉 ${CAT.name} 長大了！變成「${STAGES[s1].n}」`),300);
-  else if(before<GOALN&&FED[t]>=GOALN) setTimeout(()=>toast(`😺 ${CAT.name} 今天吃飽了！明天記得再來餵牠`),300);
+  if(s1>s0) setTimeout(()=>toast(`🎉 ${CAT.name} 長大了！變成「${stName(s1)}」`),300);
+  else if(before<GOALN&&FED[t]>=GOALN) setTimeout(()=>toast(`${SP().ic} ${CAT.name} 今天吃飽了！明天記得再來餵牠`),300);
 }
 function bubbleText(){
   if(petLine) return petLine;
-  const f=fedToday(), left=GOALN-f, m=mood();
-  if(m==="happy") return pick(["吃飽飽了，喵～","今天好幸福！","明天也要來陪我喔","呼嚕呼嚕…"]);
-  if(m==="weak") return f>0?`還差 ${left} 條魚…我好虛弱…`:"好餓…頭好暈…昨天沒吃飽…";
-  if(f===0) return pick(["肚子咕嚕咕嚕叫…","今天還沒吃東西喵…","答對題目就有魚吃嗎？"]);
-  return pick([`再 ${left} 條魚就飽了！`,"好吃！還要～","喵！再來一題！"]);
+  const sp=SP(), f=fedToday(), left=GOALN-f, m=mood(), u=sp.unit+sp.food;
+  if(m==="happy") return pick([`吃飽飽了，${sp.snd}～`,"今天好幸福！","明天也要來陪我喔",sp.act]);
+  if(m==="weak") return f>0?`還差 ${left} ${u}…我好虛弱…`:"好餓…頭好暈…昨天沒吃飽…";
+  if(f===0) return pick(["肚子咕嚕咕嚕叫…",`今天還沒吃東西${sp.snd}…`,`答對題目就有${sp.food}吃嗎？`]);
+  return pick([`再 ${left} ${u}就飽了！`,"好吃！還要～",`${sp.snd}！再來一題！`]);
 }
-const PET_LINES={happy:["呼嚕呼嚕～","摸摸好舒服喵","你今天好認真！"],normal:["喵？要餵我了嗎？","摸頭不能當飯吃啦～","去答題換魚給我嘛"],weak:["好餓…沒力氣撒嬌了…","拜託…給我一點魚…"]};
+function petLines(md){const sp=SP();return ({happy:[sp.act,`摸摸好舒服${sp.snd}`,"你今天好認真！"],normal:[`${sp.snd}？要餵我了嗎？`,"摸頭不能當飯吃啦～",`去答題換${sp.food}給我嘛`],weak:["好餓…沒力氣撒嬌了…",`拜託…給我一點${sp.food}…`]})[md]||[`${sp.snd}～`]}
 
 /* ===================== CAT DRAWING ===================== */
-function catSVG(s,md,size){
+function catSVG(s,md,size,spk){
+  const sp=SPECIES[spk||curSpKey()]||SPECIES.cat;
   const sc=[.62,.74,.85,.94,1][s], hr=[40,38,35,33,33][s], brx=[30,36,44,50,54][s], bry=[24,29,34,38,40][s];
-  const dead=md==="dead";
-  const main=dead?"#cfc9c1":"#f4a259", dark=dead?"#aaa49b":"#d9772b", cream=dead?"#efece7":"#fff4e2", pink="#f6a5b8", ink="#3b2f2b";
+  const dead=md==="dead", C=sp.c;
+  const main=dead?"#cfc9c1":C.main, dark=dead?"#aaa49b":C.dark, cream=dead?"#efece7":C.cream, inner=dead?"#d6d0c8":C.inner, pink="#f6a5b8", ink="#3b2f2b";
+  const ol=sp.outline&&!dead?` stroke="#e2d9cc" stroke-width="2.5"`:"";
   const hy=-2*bry-hr*.45; let g="";
-  g+=`<path d="M ${brx-8} -10 C ${brx+28} -6, ${brx+30} -60, ${brx+8} -72" stroke="${main}" stroke-width="12" fill="none" stroke-linecap="round"/>`;
-  g+=`<ellipse cx="0" cy="${-bry}" rx="${brx}" ry="${bry}" fill="${main}"/>`;
-  g+=`<ellipse cx="0" cy="${-bry+5}" rx="${brx*.55}" ry="${bry*.7}" fill="${cream}"/>`;
-  g+=`<path d="M ${-brx+5} ${-bry-6} q 7 4 13 0 M ${brx-5} ${-bry-6} q -7 4 -13 0" stroke="${dark}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-  g+=`<ellipse cx="${-brx*.42}" cy="-5" rx="11" ry="7" fill="${cream}"/><ellipse cx="${brx*.42}" cy="-5" rx="11" ry="7" fill="${cream}"/>`;
-  const ear=sx=>`<path d="M ${sx*hr*.92} ${hy-hr*.2} L ${sx*hr*.62} ${hy-hr*1.2} L ${sx*hr*.12} ${hy-hr*.82} Z" fill="${main}" stroke="${main}" stroke-width="6" stroke-linejoin="round"/><path d="M ${sx*hr*.76} ${hy-hr*.44} L ${sx*hr*.6} ${hy-hr*.98} L ${sx*hr*.32} ${hy-hr*.78} Z" fill="${pink}"/>`;
-  g+=ear(-1)+ear(1);
-  g+=`<circle cx="0" cy="${hy}" r="${hr}" fill="${main}"/>`;
-  g+=`<path d="M 0 ${hy-hr+4} v 10 M -9 ${hy-hr+6} v 8 M 9 ${hy-hr+6} v 8" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`;
-  g+=`<ellipse cx="0" cy="${hy+hr*.4}" rx="${hr*.44}" ry="${hr*.3}" fill="${cream}"/>`;
-  const ex=hr*.42, ey=hy+hr*.02;
+  // tail
+  if(sp.tail==="long") g+=`<path d="M ${brx-8} -10 C ${brx+28} -6, ${brx+30} -60, ${brx+8} -72" stroke="${main}" stroke-width="12" fill="none" stroke-linecap="round"/>`;
+  if(sp.tail==="short") g+=`<path d="M ${brx-10} ${-bry*1.1} q 24 -6 22 -34" stroke="${dark}" stroke-width="11" fill="none" stroke-linecap="round"/>`;
+  if(sp.tail==="puff") g+=`<circle cx="${brx-2}" cy="${-bry*.55}" r="11" fill="${sp.panda?dark:cream}"${ol}/>`;
+  // body
+  g+=`<ellipse cx="0" cy="${-bry}" rx="${brx}" ry="${bry}" fill="${main}"${ol}/>`;
+  if(!sp.panda) g+=`<ellipse cx="0" cy="${-bry+5}" rx="${brx*.55}" ry="${bry*.7}" fill="${cream}"/>`;
+  if(sp.panda) g+=`<ellipse cx="${-brx*.6}" cy="${-bry*1.15}" rx="${brx*.34}" ry="${bry*.58}" fill="${dark}"/><ellipse cx="${brx*.6}" cy="${-bry*1.15}" rx="${brx*.34}" ry="${bry*.58}" fill="${dark}"/>`;
+  if(sp.stripes) g+=`<path d="M ${-brx+5} ${-bry-6} q 7 4 13 0 M ${brx-5} ${-bry-6} q -7 4 -13 0" stroke="${dark}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  const pawC=sp.panda?dark:cream;
+  g+=`<ellipse cx="${-brx*.42}" cy="-5" rx="11" ry="7" fill="${pawC}"${sp.panda?"":ol}/><ellipse cx="${brx*.42}" cy="-5" rx="11" ry="7" fill="${pawC}"${sp.panda?"":ol}/>`;
+  // back ears
+  const earC=sp.panda?dark:main;
+  if(sp.ear==="cat"){const ear=sx=>`<path d="M ${sx*hr*.92} ${hy-hr*.2} L ${sx*hr*.62} ${hy-hr*1.2} L ${sx*hr*.12} ${hy-hr*.82} Z" fill="${main}" stroke="${main}" stroke-width="6" stroke-linejoin="round"/><path d="M ${sx*hr*.76} ${hy-hr*.44} L ${sx*hr*.6} ${hy-hr*.98} L ${sx*hr*.32} ${hy-hr*.78} Z" fill="${inner}"/>`;g+=ear(-1)+ear(1)}
+  if(sp.ear==="long"){const ear=sx=>`<g transform="rotate(${sx*9} ${sx*hr*.36} ${hy-hr*.7})"><ellipse cx="${sx*hr*.36}" cy="${hy-hr*1.2}" rx="${hr*.22}" ry="${hr*.62}" fill="${main}"${ol}/><ellipse cx="${sx*hr*.36}" cy="${hy-hr*1.18}" rx="${hr*.11}" ry="${hr*.46}" fill="${inner}"/></g>`;g+=ear(-1)+ear(1)}
+  if(sp.ear==="round"){const ear=sx=>`<circle cx="${sx*hr*.7}" cy="${hy-hr*.7}" r="${hr*.32}" fill="${earC}"${sp.panda?"":ol}/>${sp.panda?"":`<circle cx="${sx*hr*.7}" cy="${hy-hr*.7}" r="${hr*.17}" fill="${inner}"/>`}`;g+=ear(-1)+ear(1)}
+  if(sp.ear==="smallround"){const ear=sx=>`<circle cx="${sx*hr*.62}" cy="${hy-hr*.78}" r="${hr*.23}" fill="${main}"/><circle cx="${sx*hr*.62}" cy="${hy-hr*.78}" r="${hr*.12}" fill="${inner}"/>`;g+=ear(-1)+ear(1)}
+  // head
+  g+=`<circle cx="0" cy="${hy}" r="${hr}" fill="${main}"${ol}/>`;
+  if(sp.ear==="floppy"){const ear=sx=>`<ellipse cx="${sx*hr*.88}" cy="${hy-hr*.02}" rx="${hr*.26}" ry="${hr*.56}" fill="${dark}" transform="rotate(${sx*18} ${sx*hr*.88} ${hy-hr*.02})"/>`;g+=ear(-1)+ear(1)}
+  if(sp.stripes) g+=`<path d="M 0 ${hy-hr+4} v 10 M -9 ${hy-hr+6} v 8 M 9 ${hy-hr+6} v 8" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`;
+  if(!sp.panda) g+=`<ellipse cx="0" cy="${hy+hr*.4}" rx="${hr*.44}" ry="${hr*.3}" fill="${cream}"/>`;
+  const ex=hr*.42, ey=hy+hr*.02, ny=hy+hr*.28;
+  if(sp.cheeks) g+=`<circle cx="${-hr*.62}" cy="${ny+4}" r="${hr*.3}" fill="${cream}"/><circle cx="${hr*.62}" cy="${ny+4}" r="${hr*.3}" fill="${cream}"/>`;
+  if(sp.panda&&!dead) g+=`<ellipse cx="${-ex}" cy="${ey+2}" rx="10" ry="13" fill="${dark}" transform="rotate(25 ${-ex} ${ey+2})"/><ellipse cx="${ex}" cy="${ey+2}" rx="10" ry="13" fill="${dark}" transform="rotate(-25 ${ex} ${ey+2})"/>`;
+  const eyeC=sp.panda&&!dead?"#fff":ink;
   if(dead) g+=`<path d="M ${-ex-6} ${ey} q 6 5 12 0 M ${ex-6} ${ey} q 6 5 12 0" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-  else if(md==="happy") g+=`<path d="M ${-ex-6} ${ey+2} q 6 -9 12 0 M ${ex-6} ${ey+2} q 6 -9 12 0" stroke="${ink}" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="${-ex-7}" cy="${ey+12}" rx="7" ry="4" fill="${pink}" opacity=".75"/><ellipse cx="${ex+7}" cy="${ey+12}" rx="7" ry="4" fill="${pink}" opacity=".75"/>`;
+  else if(md==="happy") g+=`<path d="M ${-ex-6} ${ey+2} q 6 -9 12 0 M ${ex-6} ${ey+2} q 6 -9 12 0" stroke="${eyeC}" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="${-ex-8}" cy="${ey+13}" rx="7" ry="4" fill="${pink}" opacity=".75"/><ellipse cx="${ex+8}" cy="${ey+13}" rx="7" ry="4" fill="${pink}" opacity=".75"/>`;
   else{const ry=md==="weak"?5:7.5;
-    g+=`<ellipse cx="${-ex}" cy="${ey}" rx="6" ry="${ry}" fill="${ink}"/><ellipse cx="${ex}" cy="${ey}" rx="6" ry="${ry}" fill="${ink}"/><circle cx="${-ex+2}" cy="${ey-3}" r="2.2" fill="#fff"/><circle cx="${ex+2}" cy="${ey-3}" r="2.2" fill="#fff"/>`;
-    if(md==="weak") g+=`<path d="M ${-ex-9} ${ey-13} l 13 5 M ${ex+9} ${ey-13} l -13 5" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/><path d="M ${ex+7} ${ey+4} q 3 6 0 9 q -3 -3 0 -9" fill="#7dd3fc"/>`;}
-  const ny=hy+hr*.28;
-  g+=`<path d="M -4.5 ${ny} h 9 l -4.5 5 z" fill="${pink}"/>`;
-  g+=(md==="weak"||dead)?`<path d="M -6 ${ny+12} q 6 -5 12 0" stroke="${ink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
-                        :`<path d="M 0 ${ny+5} q -4 6 -9 2 M 0 ${ny+5} q 4 6 9 2" stroke="${ink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
-  g+=`<path d="M ${-hr*.46} ${ny+2} l ${-hr*.5} -4 M ${-hr*.46} ${ny+7} l ${-hr*.5} 3 M ${hr*.46} ${ny+2} l ${hr*.5} -4 M ${hr*.46} ${ny+7} l ${hr*.5} 3" stroke="${ink}" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>`;
+    g+=`<ellipse cx="${-ex}" cy="${ey}" rx="6" ry="${ry}" fill="${eyeC}"/><ellipse cx="${ex}" cy="${ey}" rx="6" ry="${ry}" fill="${eyeC}"/>`;
+    g+=sp.panda?`<circle cx="${-ex+1}" cy="${ey}" r="3" fill="${ink}"/><circle cx="${ex+1}" cy="${ey}" r="3" fill="${ink}"/>`:`<circle cx="${-ex+2}" cy="${ey-3}" r="2.2" fill="#fff"/><circle cx="${ex+2}" cy="${ey-3}" r="2.2" fill="#fff"/>`;
+    if(md==="weak") g+=`<path d="M ${-ex-9} ${ey-14} l 13 5 M ${ex+9} ${ey-14} l -13 5" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/><path d="M ${ex+8} ${ey+5} q 3 6 0 9 q -3 -3 0 -9" fill="#7dd3fc"/>`;}
+  g+=sp.darkNose?`<ellipse cx="0" cy="${ny+2}" rx="6.5" ry="4.5" fill="${ink}"/>`:`<path d="M -4.5 ${ny} h 9 l -4.5 5 z" fill="${pink}"/>`;
+  g+=(md==="weak"||dead)?`<path d="M -6 ${ny+13} q 6 -5 12 0" stroke="${ink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
+                        :`<path d="M 0 ${ny+6} q -4 6 -9 2 M 0 ${ny+6} q 4 6 9 2" stroke="${ink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  if(sp.teeth&&!dead) g+=`<rect x="-3.5" y="${ny+8}" width="7" height="6" rx="1.5" fill="#fff" stroke="#e2d9cc" stroke-width="1"/>`;
+  if(sp.whiskers) g+=`<path d="M ${-hr*.46} ${ny+2} l ${-hr*.5} -4 M ${-hr*.46} ${ny+7} l ${-hr*.5} 3 M ${hr*.46} ${ny+2} l ${hr*.5} -4 M ${hr*.46} ${ny+7} l ${hr*.5} 3" stroke="${ink}" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>`;
   if(s>=2&&!dead) g+=`<path d="M ${-hr*.62} ${hy+hr*.86} q ${hr*.62} ${hr*.32} ${hr*1.24} 0" stroke="#e11d48" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="0" cy="${hy+hr*1.04}" r="6" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>`;
   if(s>=4&&!dead) g+=`<path d="M -18 ${hy-hr+3} l 0 -20 l 9 10 l 9 -16 l 9 16 l 9 -10 l 0 20 z" fill="#facc15" stroke="#ca8a04" stroke-width="2" stroke-linejoin="round"/>`;
-  if(dead) g+=`<ellipse cx="0" cy="${hy-hr-16}" rx="${hr*.6}" ry="7" fill="none" stroke="#facc15" stroke-width="4"/>`;
+  if(dead) g+=`<ellipse cx="0" cy="${hy-hr-(sp.ear==="long"?40:16)}" rx="${hr*.6}" ry="7" fill="none" stroke="#facc15" stroke-width="4"/>`;
   return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true"><ellipse cx="100" cy="187" rx="${brx*sc*1.25}" ry="7" fill="rgba(0,0,0,.08)"/><g transform="translate(100 185) scale(${sc})">${g}</g></svg>`;
 }
 
@@ -2059,10 +2095,10 @@ function catSVG(s,md,size){
 function renderHeader(){
   const f=fedToday();
   let mini;
-  if(!CAT) mini=`<button class="mini" data-act="tab" data-k="cat"><span class="mc">${catSVG(0,"happy",58)}</span><span class="mt"><span class="mn">去領養一隻小貓吧 🐾</span><span class="muted small">答對題目就能餵牠</span></span></button>`;
-  else if(CAT.dead) mini=`<button class="mini warn" data-act="tab" data-k="cat"><span class="mc">${catSVG(stageOf(CAT.food),"dead",48)}</span><span class="mt"><span class="mn">${esc(CAT.name)} 回喵星了</span><span class="muted small">點這裡領養新的小貓</span></span></button>`;
+  if(!CAT) mini=`<button class="mini" data-act="tab" data-k="cat"><span class="mc">${catSVG(0,"happy",58)}</span><span class="mt"><span class="mn">去領養一隻寵物吧 🐾</span><span class="muted small">答對題目就能餵牠</span></span></button>`;
+  else if(CAT.dead) mini=`<button class="mini warn" data-act="tab" data-k="cat"><span class="mc">${catSVG(stageOf(CAT.food),"dead",48)}</span><span class="mt"><span class="mn">${esc(CAT.name)} 回${SP().star}了</span><span class="muted small">點這裡領養新的寵物</span></span></button>`;
   else{const s=stageOf(CAT.food),warn=CAT.miss>=1&&f<GOALN;
-    mini=`<button class="mini ${warn?"warn":""}" data-act="tab" data-k="cat"><span class="mc">${catSVG(s,mood(),58)}</span><span class="mt"><span class="mn">${esc(CAT.name)}<small>${STAGES[s].n}${warn?" · 好餓！":""}</small></span><span class="mb"><i style="width:${Math.min(100,f/GOALN*100)}%"></i></span></span><span class="mf" id="miniFish">🐟 ${Math.min(f,GOALN)}/${GOALN}</span></button>`;}
+    mini=`<button class="mini ${warn?"warn":""}" data-act="tab" data-k="cat"><span class="mc">${catSVG(s,mood(),58)}</span><span class="mt"><span class="mn">${esc(CAT.name)}<small>${stName(s)}${warn?" · 好餓！":""}</small></span><span class="mb"><i style="width:${Math.min(100,f/GOALN*100)}%"></i></span></span><span class="mf" id="miniFish">${SP().fe} ${Math.min(f,GOALN)}/${GOALN}</span></button>`;}
   let row2="";
   if(tab!=="cat"){
     const L=LANGS[lang()];
@@ -2073,7 +2109,7 @@ function renderHeader(){
   $("#hdr").innerHTML=`<div class="top">${mini}<button class="timer ${tRun?"running":""}" id="timer" data-act="timer">${tRun?"⏸ ":"⏱ "}${fmt(tLeft)}</button></div>${row2}`;
 }
 function renderNav(){
-  const items=[{k:"cat",ic:"🐱",l:"貓咪"}].concat(SECTIONS[lang()]);
+  const items=[{k:"cat",ic:SP().ic,l:"寵物"}].concat(SECTIONS[lang()]);
   $("#tabs").innerHTML=items.map(x=>`<button class="${x.k===tab?"on":""}" data-act="tab" data-k="${x.k}"><span class="ic">${x.ic}</span>${x.l}</button>`).join("");
 }
 function render(){
@@ -2089,7 +2125,7 @@ function render(){
 function flyFish(n){
   const m=document.getElementById("miniFish"); if(!m) return;
   const r=m.getBoundingClientRect(), f=document.createElement("div");
-  f.className="fly"; f.textContent="+"+n+" 🐟"; f.style.left=(r.left+4)+"px"; f.style.top=(r.bottom+2)+"px";
+  f.className="fly"; f.textContent="+"+n+" "+SP().fe; f.style.left=(r.left+4)+"px"; f.style.top=(r.bottom+2)+"px";
   document.body.appendChild(f); setTimeout(()=>f.remove(),1100);
   const mc=document.querySelector(".mini .mc"); if(mc) mc.classList.add("hop");
 }
@@ -2100,46 +2136,49 @@ function langTiles(){
     L.tracks.forEach(t=>{const tr=TRACKS[t],pk=prog(t).known;Object.keys(tr.decks).forEach(d=>{tot+=tr.decks[d].items.length;kn+=d==="vocab"?(SR[t]?srsStats(t).known:(pk.vocab||[]).length):(pk[d]||[]).length})});
     return `<button class="tile" data-act="lang" data-k="${l}"><span class="badge" style="background:${L.color}">${L.badge}</span><span class="tt"><b>${L.name} <span class="lvmini">Lv${Math.max(...L.tracks.map(t=>lvOf(t).lv))}</span></b><small>${L.desc}</small></span><span class="tp">已記住<br><b style="font-size:1rem;color:var(--ink)">${kn}/${tot}</b></span></button>`}).join("");
 }
+function spPicker(cur,act){
+  return `<div class="sppick">${Object.keys(SPECIES).map(k=>{const x=SPECIES[k];return `<button class="spbtn ${k===cur?"on":""}" data-act="${act}" data-k="${k}">${catSVG(2,"happy",76,k)}<b>${x.n}</b><small>吃${x.food}${x.fe}</small></button>`}).join("")}</div>`}
 function adoptForm(title,desc){
-  return `<h2 style="margin-top:14px">${title}</h2><p class="muted" style="margin:0">${desc}</p>
-  <input id="catName" class="inp" maxlength="10" placeholder="幫牠取個名字" value="小橘">
+  return `<h2 style="margin-top:14px">${title}</h2><p class="muted" style="margin:0 0 8px">先選一種動物：</p>${spPicker(pendingSp,"pickSp")}<p class="muted" style="margin:10px 0 0">${desc}</p>
+  <input id="catName" class="inp" maxlength="10" placeholder="幫牠取個名字" value="${esc(adoptNameDraft!==null?adoptNameDraft:SPECIES[pendingSp].def)}">
   <button class="btn" data-act="adopt" style="margin-top:10px">領養 🐾</button>`;
 }
-function rulesText(){return `每答對一題，就能餵牠一條魚 🐟。每天餵飽 ${GOALN} 條，牠會慢慢長大；一天沒吃飽牠會變虛弱，<b>連續兩天沒吃飽就會餓死</b>。`}
+function rulesText(){const sp=SP();return `每答對一題，就能餵牠一${sp.unit}${sp.food} ${sp.fe}。每天餵飽 ${GOALN} ${sp.unit}，牠會慢慢長大；一天沒吃飽牠會變虛弱，<b>連續兩天沒吃飽就會餓死</b>。`}
 function renderHome(){
-  const settings=`<div class="card"><h2>每天要餵幾條魚？</h2><p class="muted" style="margin:0">也就是每天要答對幾題。設得少一點，比較容易每天都做到。</p>
+  const settings=`<div class="card"><h2>每天要餵幾${foodN()}？</h2><p class="muted" style="margin:0">也就是每天要答對幾題。設得少一點，比較容易每天都做到。</p>
     <div class="chips">${GOAL_OPTS.map(n=>`<button class="chip ${n===GOALN?"on":""}" data-act="goal" data-k="${n}">${n} 題</button>`).join("")}</div>
     <h2 style="margin-top:20px">每天解鎖幾個新單字？</h2><p class="muted" style="margin:0">新字會依照常用程度慢慢解鎖；前一天沒學完的新字會先留著，不會越堆越多。</p>
     <div class="chips">${[5,10,15,20].map(n=>`<button class="chip ${n===DAILY_NEW?"on":""}" data-act="dnew" data-k="${n}">${n} 個</button>`).join("")}</div>
-    <div class="btns"><button class="btn ghost" data-act="reset">${resetArmed?"再按一次，確認清除所有學習進度":"清除學習進度（貓咪不受影響）"}</button></div></div>`+voiceCheckCard();
-  const memorial=CATS.length?`<div class="card"><h2>🌈 喵星紀念冊</h2>${CATS.map(c=>`<div class="row between small" style="padding:6px 0;border-top:1px solid var(--line)"><span>${esc(c.name)}（${c.stage}）</span><span class="muted">陪你 ${c.days} 天 · 吃了 ${c.food} 條魚</span></div>`).join("")}</div>`:"";
+    <div class="btns"><button class="btn ghost" data-act="reset">${resetArmed?"再按一次，確認清除所有學習進度":"清除學習進度（寵物不受影響）"}</button></div></div>`+voiceCheckCard();
+  const memorial=CATS.length?`<div class="card"><h2>🌈 彩虹紀念冊</h2>${CATS.map(c=>`<div class="row between small" style="padding:6px 0;border-top:1px solid var(--line)"><span>${c.ic||"🐱"} ${esc(c.name)}（${c.stage}）</span><span class="muted">陪你 ${c.days} 天 · 吃了 ${c.food} ${(c.unit||"條魚").slice(1)}</span></div>`).join("")}</div>`:"";
   if(!CAT){
-    return `<div class="card"><div class="room"><div class="window"></div><div class="plant">🪴</div><div class="bubble">帶我回家好不好？喵～</div><div class="catwrap">${catSVG(0,"normal",210)}</div></div>
-      ${adoptForm("領養一隻小貓吧！",rulesText())}</div>`+settings;
+    return `<div class="card"><div class="room"><div class="window"></div><div class="plant">🪴</div><div class="bubble">帶我回家好不好？${SP().snd}～</div><div class="catwrap">${catSVG(0,"normal",210)}</div></div>
+      ${adoptForm("領養一隻寵物吧！",rulesText())}</div>`+settings;
   }
   if(CAT.dead){
     const days=daysBetween(CAT.born,CAT.diedOn)+1;
     return `<div class="card"><div class="room dead"><div class="window"></div><div class="bubble">謝謝你陪我 ${days} 天…</div><div class="catwrap">${catSVG(stageOf(CAT.food),"dead",210)}</div></div>
-      <div class="catname">${esc(CAT.name)} 回喵星了 😿</div>
-      <p class="muted" style="text-align:center;margin:4px 0 0">牠連續兩天沒吃飽，撐不下去了。<br>牠總共吃了 ${CAT.food} 條魚，長到「${STAGES[stageOf(CAT.food)].n}」。</p>
-      ${adoptForm("再領養一隻小貓",rulesText())}</div>`+memorial+settings;
+      <div class="catname">${esc(CAT.name)} 回${SP().star}了 😢</div>
+      <p class="muted" style="text-align:center;margin:4px 0 0">牠連續兩天沒吃飽，撐不下去了。<br>牠總共吃了 ${CAT.food} ${SP().unit}${SP().food}，長到「${stName(stageOf(CAT.food))}」。</p>
+      ${adoptForm("再領養一隻寵物",rulesText())}</div>`+memorial+settings;
   }
   const f=fedToday(), s=stageOf(CAT.food), age=daysBetween(CAT.born,today())+1, md=mood(), nx=STAGES[s+1];
   const warn=CAT.miss>=1&&f<GOALN;
-  const status= f>=GOALN?`😺 今天吃飽了！明天記得再來餵 ${esc(CAT.name)}。想多練習的話，多答對的魚會幫牠長得更快。`
+  const status= f>=GOALN?`${SP().ic} 今天吃飽了！明天記得再來餵 ${esc(CAT.name)}。想多練習的話，多答對的${SP().food}會幫牠長得更快。`
               : warn?`⚠️ 昨天沒吃飽，${esc(CAT.name)} 很虛弱。今天再沒吃飽，牠就會餓死！還差 ${GOALN-f} 題。`
               : `還要答對 ${GOALN-f} 題，${esc(CAT.name)} 今天才會吃飽。`;
   const nameRow=renaming?`<div class="row" style="margin-top:12px"><input id="renameInp" class="inp" style="margin:0" maxlength="10" value="${esc(CAT.name)}"><button class="btn" style="width:auto" data-act="renameSave">儲存</button></div>`
-                        :`<div class="catname">${esc(CAT.name)} <button class="mini-btn" data-act="rename" aria-label="改名字">✏️</button></div>`;
-  const growth=nx?`<div class="row between"><b>成長</b><span class="muted small">${STAGES[s].n} → ${nx.n}</span></div>
+                        :`<div class="catname">${esc(CAT.name)} <button class="mini-btn" data-act="rename" aria-label="改名字">✏️</button><button class="mini-btn" data-act="swapOpen" aria-label="換動物">🔄</button></div>`;
+  const swapper=swapOpen?`<div style="margin-top:10px"><div class="muted small" style="text-align:center">選一個新造型（名字、成長和飯量都會保留）</div>${spPicker(CAT.sp||"cat","swapSp")}</div>`:"";
+  const growth=nx?`<div class="row between"><b>成長</b><span class="muted small">${stName(s)} → ${stName(s+1)}</span></div>
       <div class="bar"><i style="width:${(CAT.food-STAGES[s].at)/(nx.at-STAGES[s].at)*100}%"></i></div>
-      <div class="muted">再吃 <b>${nx.at-CAT.food}</b> 條魚，就會長成「${nx.n}」</div>`
-     :`<div class="row between"><b>成長</b><span class="pill">👑 已經是貓大王</span></div><div class="muted" style="margin-top:6px">牠已經長到最大了，繼續每天餵飽牠吧！</div>`;
+      <div class="muted">再吃 <b>${nx.at-CAT.food}</b> ${SP().unit}${SP().food}，就會長成「${stName(s+1)}」</div>`
+     :`<div class="row between"><b>成長</b><span class="pill">👑 已經是${stName(4)}</span></div><div class="muted" style="margin-top:6px">牠已經長到最大了，繼續每天餵飽牠吧！</div>`;
   const streak=(CAT.streak||0)+(f>=GOALN?1:0);
   return `<div class="card"><div class="room"><div class="window"></div><div class="plant">🪴</div><div class="bubble">${bubbleText()}</div>
-      <div class="catwrap" data-act="pet">${catSVG(s,md,s>=3?230:210)}</div><div class="bowl">🐟 ${f}</div></div>
-    ${nameRow}<div class="row center" style="margin-top:4px"><span class="pill">${STAGES[s].n}</span><span class="muted">陪你第 ${age} 天</span></div></div>
-  <div class="card"><div class="row between"><b>今天的飯量</b><span style="font-weight:700">🐟 ${Math.min(f,GOALN)} / ${GOALN}</span></div>
+      <div class="catwrap" data-act="pet">${catSVG(s,md,s>=3?230:210)}</div><div class="bowl">${SP().fe} ${f}</div></div>
+    ${nameRow}${swapper}<div class="row center" style="margin-top:4px"><span class="pill">${stName(s)}</span><span class="muted">陪你第 ${age} 天</span></div></div>
+  <div class="card"><div class="row between"><b>今天的飯量</b><span style="font-weight:700">${SP().fe} ${Math.min(f,GOALN)} / ${GOALN}</span></div>
     <div class="bar food ${warn?"warn":""}"><i style="width:${Math.min(100,f/GOALN*100)}%"></i></div>
     <div class="status ${warn?"warn":""}">${status}</div></div>
   <div class="card">${growth}
@@ -2147,7 +2186,7 @@ function renderHome(){
     <div class="stat"><div class="n">${streak}</div><div class="muted small">連續吃飽</div></div>
     <div class="stat"><div class="n">${age}</div><div class="muted small">陪伴天數</div></div></div></div>
   <h2 class="sec">今天想練哪種語言？</h2>${langTiles()}
-  <p class="muted small" style="text-align:center;margin:-2px 0 16px">小測驗、文法／句型、閱讀答對都會得到魚；翻字卡是練習，不算魚。</p>
+  <p class="muted small" style="text-align:center;margin:-2px 0 16px">小測驗、文法／句型、閱讀答對都會得到${SP().food}；翻字卡是練習，不算${SP().food}。</p>
   ${memorial}${settings}`;
 }
 
@@ -2204,7 +2243,7 @@ function startSess(){const S=srsOf(),td=today();
 function lvLabel(c){return !c.s?"新":c.b>=4?"熟練":"Lv"+c.b}
 function renderSRS(){
   dailyUnlock(track);
-  const sub=`<div class="sub">${[["today","今日學習"],["quiz","小測驗 🐟"],["book","單字本"]].map(([k,l])=>`<button class="${V.smode===k?"on":""}" data-act="smode" data-k="${k}">${l}</button>`).join("")}</div>`;
+  const sub=`<div class="sub">${[["today","今日學習"],["quiz","小測驗 "+SP().fe],["book","單字本"]].map(([k,l])=>`<button class="${V.smode===k?"on":""}" data-act="smode" data-k="${k}">${l}</button>`).join("")}</div>`;
   if(V.smode==="quiz") return sub+renderVQuiz();
   if(V.smode==="book") return sub+renderBook();
   return sub+(V.sess?renderSess():renderToday());
@@ -2217,7 +2256,7 @@ function renderToday(){
     <div class="row" style="margin-top:10px"><div class="stat"><div class="n">${st.nw}</div><div class="muted small">新單字</div></div>
     <div class="stat"><div class="n">${st.due}</div><div class="muted small">要複習</div></div></div>
     ${todo>0?`<div class="btns"><button class="btn" data-act="sstart">開始學習（${todo} 個）</button></div>`
-      :`<p style="text-align:center;font-weight:700;margin:16px 0 4px">🎉 今天的單字都完成了！</p><p class="muted" style="text-align:center;margin:0">明天會再解鎖 ${DAILY_NEW} 個新字。去做小測驗就能餵貓 🐟</p>
+      :`<p style="text-align:center;font-weight:700;margin:16px 0 4px">🎉 今天的單字都完成了！</p><p class="muted" style="text-align:center;margin:0">明天會再解鎖 ${DAILY_NEW} 個新字。去做小測驗就能餵${SP().n} ${SP().fe}</p>
         ${left>0?`<div class="btns"><button class="btn ghost" data-act="smore">還想多學？再解鎖 5 個</button></div>`:""}`}
   </div>
   <div class="card"><div class="row between"><b>單字庫進度</b><span class="muted small">共 ${st.total} 個</span></div>
@@ -2225,12 +2264,12 @@ function renderToday(){
     <div class="row"><div class="stat"><div class="n">${st.unlocked}</div><div class="muted small">已解鎖</div></div>
     <div class="stat"><div class="n">${st.learn}</div><div class="muted small">學習中</div></div>
     <div class="stat"><div class="n">${st.mast}</div><div class="muted small">已熟練</div></div></div>
-    <p class="muted small" style="margin:12px 0 0">記得的字會在 1、3、7、14、30 天後再出現複習；忘記就從隔天重新開始。複習時連續記得 3 次就算「熟練」。每天解鎖幾個新字，可以在「貓咪」頁下方設定。</p></div>`;
+    <p class="muted small" style="margin:12px 0 0">記得的字會在 1、3、7、14、30 天後再出現複習；忘記就從隔天重新開始。複習時連續記得 3 次就算「熟練」。每天解鎖幾個新字，可以在「寵物」頁下方設定。</p></div>`;
 }
 function renderSess(){
   const Q=V.sess, n=Q.q.length;
   if(Q.i>=n) return `<div class="card" style="text-align:center"><div class="big">🎉</div><h2 style="margin-top:10px">今天的單字完成了！</h2>
-    <p class="muted">做一回小測驗確認自己真的記住了，答對還能餵貓 🐟</p>
+    <p class="muted">做一回小測驗確認自己真的記住了，答對還能餵${SP().n} ${SP().fe}</p>
     <div class="btns"><button class="btn ghost" data-act="sdone">回今日任務</button><button class="btn" data-act="smode" data-k="quiz">去做測驗</button></div></div>`;
   const it=Q.q[Q.i], w=itemByW(it.w);
   const tag=it.kind==="new"?`<span class="pill">新字</span>`:`<span class="pill" style="background:#fef3c7;color:#b45309">複習</span>`;
@@ -2272,14 +2311,14 @@ function renderDeck(){
   if(tab==="vocab") return renderSRS();
   const d=deck();
   return (d.intro&&V.mode==="cards"?`<div class="intro">${d.intro}</div>`:"")+
-  `<div class="sub"><button class="${V.mode==="cards"?"on":""}" data-act="vmode" data-k="cards">字卡練習</button><button class="${V.mode==="quiz"?"on":""}" data-act="vmode" data-k="quiz">小測驗 🐟</button></div>`+
+  `<div class="sub"><button class="${V.mode==="cards"?"on":""}" data-act="vmode" data-k="cards">字卡練習</button><button class="${V.mode==="quiz"?"on":""}" data-act="vmode" data-k="quiz">小測驗 ${SP().fe}</button></div>`+
   (V.mode==="cards"?renderCards():renderVQuiz());
 }
 function renderCards(){
   if(!V.order) buildOrder();
   const d=deck(), total=V.order.length, known=knownArr().length;
   if(V.i>=total) return `<div class="card" style="text-align:center"><div class="big">🎉</div><h2 style="margin-top:10px">這一輪完成了！</h2>
-    <p class="muted">已記住 ${known} / ${total} 個。不熟的會排在下一輪最前面。<br>去做小測驗，答對就能餵貓 🐟</p>
+    <p class="muted">已記住 ${known} / ${total} 個。不熟的會排在下一輪最前面。<br>去做小測驗，答對就能餵${SP().n} ${SP().fe}</p>
     <div class="btns"><button class="btn ghost" data-act="vrestart">再翻一輪</button><button class="btn" data-act="vmode" data-k="quiz">去做測驗</button></div></div>`;
   const w=V.order[V.i], isK=knownArr().includes(w.w);
   return `<div class="row between muted small"><span>第 ${V.i+1} / ${total} 張</span><span>已記住 ${known} 個${isK?" · <span class='pill'>已記住</span>":""}</span></div>
@@ -2306,7 +2345,7 @@ function renderVQuiz(){
   const d=deck(), Q=V.quiz, n=Q.items.length;
   if(Q.i>=n){const pct=Q.score/n;
     return `<div class="card" style="text-align:center"><div class="muted">本次得分</div><div class="big">${Q.score} / ${n}</div>
-    <p style="font-weight:700;color:#ea580c">+${Q.score} 🐟 已餵給貓咪</p>
+    <p style="font-weight:700;color:#ea580c">+${Q.score} ${SP().fe} 已餵給${CAT?esc(CAT.name):SP().n}</p>
     <p class="muted">${pct>=.8?"很棒！這些你大多掌握了。":pct>=.5?"不錯，錯的再翻幾次字卡就會記住。":"沒關係，先回去用字卡多翻幾輪。"}</p>
     ${Q.wrong.length?`<div style="text-align:left" class="exp"><b>要再複習的</b><span class="fx">${Q.wrong.map(w=>`${w.w}${w.p?"（"+w.p+"）":""}：${w.m}`).join("<br>")}</span></div>`:""}
     <div class="btns"><button class="btn" data-act="vqnew">再測一次</button><button class="btn ghost" data-act="${tab==="vocab"?"smode":"vmode"}" data-k="${tab==="vocab"?"today":"cards"}">${tab==="vocab"?"回今日學習":"回字卡"}</button></div></div>`;}
@@ -2315,10 +2354,10 @@ function renderVQuiz(){
                            :`<div class="muted small">${d.qB}</div><div class="q">${it.w.m}</div>`;
   const opts=it.opts.map((o,k)=>{let c="";if(ans){if(k===it.a)c="right";else if(k===Q.picked)c="wrong"}
     return `<button class="opt ${it.dir==="B"?"fx":""} ${c}" data-act="vqpick" data-k="${k}" ${ans?"disabled":""}>${it.dir==="A"?o.m:o.w}</button>`}).join("");
-  return `<div class="row between muted small"><span>第 ${Q.i+1} / ${n} 題</span><span>🐟 ${Q.score}</span></div>
+  return `<div class="row between muted small"><span>第 ${Q.i+1} / ${n} 題</span><span>${SP().fe} ${Q.score}</span></div>
   <div class="bar"><i style="width:${Q.i/n*100}%"></i></div>
   <div class="card">${prompt}${opts}
-  ${ans?`<div class="exp"><b>${Q.picked===it.a?"答對了！+1 🐟":"記一下："}</b><span class="fx">${it.w.w}</span>${it.w.p?"（"+it.w.p+"）":""}：${it.w.m}<br><span class="muted fx">${it.w.ex}</span></div>
+  ${ans?`<div class="exp"><b>${Q.picked===it.a?"答對了！+1 "+SP().fe:"記一下："}</b><span class="fx">${it.w.w}</span>${it.w.p?"（"+it.w.p+"）":""}：${it.w.m}<br><span class="muted fx">${it.w.ex}</span></div>
   <div class="btns"><button class="btn" data-act="vqnext">${Q.i+1<n?"下一題":"看結果"}</button></div>`:""}</div>`;
 }
 
@@ -2334,23 +2373,23 @@ function renderGrammar(){
   if(!G) newG();
   const data=TRACKS[track].grammar, n=G.list.length, word=lang()==="en"?"文法":"句型";
   if(G.i>=n) return `<div class="card" style="text-align:center"><div class="muted">本次得分</div><div class="big">${G.score} / ${n}</div>
-    <p style="font-weight:700;color:#ea580c">+${G.score} 🐟 已餵給貓咪</p>${levelCard()}<p class="muted small">下一回會依你的等級出題，常錯的題型會多出幾題。</p>
+    <p style="font-weight:700;color:#ea580c">+${G.score} ${SP().fe} 已餵給${CAT?esc(CAT.name):SP().n}</p>${levelCard()}<p class="muted small">下一回會依你的等級出題，常錯的題型會多出幾題。</p>
     ${G.wrong.length?`<div class="exp" style="text-align:left"><b>需要加強的${word}</b>${[...new Set(G.wrong.map(i=>data[i].t))].join("、")}</div>`:`<p>全對！${word}觀念很穩。</p>`}
     <div class="btns">${G.wrong.length?`<button class="btn" data-act="gwrong">只練錯的題目</button>`:""}<button class="btn ${G.wrong.length?"ghost":""}" data-act="gnew">全部重做</button></div></div>`;
   const q=data[G.list[G.i]], ans=G.picked!==null, qlv=q.lv||1, chall=qlv>lvOf().lv;
   const opts=q.o.map((o,k)=>{let c="";if(ans){if(k===q.a)c="right";else if(k===G.picked)c="wrong"}
     return `<button class="opt fx ${c}" data-act="gpick" data-k="${k}" ${ans?"disabled":""}>${o}</button>`}).join("");
-  return (G.i===0&&!ans?levelCard():"")+`<div class="row between muted small"><span>第 ${G.i+1} / ${n} 題 · <span class="pill">${q.t}</span>${chall?` <span class="pill" style="background:#fef3c7;color:#b45309">挑戰題 Lv${qlv}</span>`:""}</span><span>🐟 ${G.score}</span></div>
+  return (G.i===0&&!ans?levelCard():"")+`<div class="row between muted small"><span>第 ${G.i+1} / ${n} 題 · <span class="pill">${q.t}</span>${chall?` <span class="pill" style="background:#fef3c7;color:#b45309">挑戰題 Lv${qlv}</span>`:""}</span><span>${SP().fe} ${G.score}</span></div>
   <div class="bar"><i style="width:${G.i/n*100}%"></i></div>
   <div class="card"><div class="q fx">${q.q.replace("___","<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>")}</div>${opts}
-  ${ans?`<div class="exp"><b>${G.picked===q.a?"✓ 正確！+1 🐟":"✗ 正確答案："+q.o[q.a]}</b>${q.e}</div>
+  ${ans?`<div class="exp"><b>${G.picked===q.a?"✓ 正確！+1 "+SP().fe:"✗ 正確答案："+q.o[q.a]}</b>${q.e}</div>
   <div class="btns"><button class="btn" data-act="gnext">${G.i+1<n?"下一題":"看結果"}</button></div>`:""}</div>`;
 }
 
 /* ===================== READING ===================== */
 function renderReading(){
   const list=TRACKS[track].reading, done=prog().read;
-  if(R.open===null) return `<p class="intro">${lang()==="en"?"先讀完文章，再一次作答。不會的字先猜，交卷後看解析。":"零基礎也可以讀！文章可以打開「讀音」和「中文」對照，還能聽朗讀。"}答對幾題就得到幾條魚 🐟</p>`+
+  if(R.open===null) return `<p class="intro">${lang()==="en"?"先讀完文章，再一次作答。不會的字先猜，交卷後看解析。":"零基礎也可以讀！文章可以打開「讀音」和「中文」對照，還能聽朗讀。"}答對幾題就得到幾${SP().unit}${SP().food} ${SP().fe}</p>`+
     levelCard()+list.map((p,i)=>{const d=done[i],pl=p.lv||1,cur=lvOf().lv;
       if(pl>cur) return pl===cur+1?`<div class="card rlist locked"><div class="row between"><span class="pill">🔒 Lv${pl}</span><span class="muted small">升到 Lv${pl} 解鎖</span></div><h2 class="fx" style="margin-top:8px">${p.title}</h2></div>`:"";
       return `<button class="card rlist" data-act="ropen" data-k="${i}"><div class="row between"><span class="pill">Lv${pl} · ${p.type}</span><span class="muted small">${d!==undefined?`上次 ${d}/${p.qs.length}`:"未作答"}</span></div>
@@ -2369,7 +2408,7 @@ function renderReading(){
   const answered=Object.keys(R.ans).length, score=p.qs.filter((q,i)=>R.ans[i]===q.a).length;
   return `<button class="back" data-act="rback">← 文章列表</button>
   <div class="card"><span class="pill">${p.type}</span><h2 class="fx" style="margin:8px 0 6px">${p.title}</h2>${toggles}${body}</div>${qs}
-  ${R.done?`<div class="card" style="text-align:center"><div class="muted">得分</div><div class="big">${score} / ${p.qs.length}</div><p style="font-weight:700;color:#ea580c">+${score} 🐟 已餵給貓咪</p>
+  ${R.done?`<div class="card" style="text-align:center"><div class="muted">得分</div><div class="big">${score} / ${p.qs.length}</div><p style="font-weight:700;color:#ea580c">+${score} ${SP().fe} 已餵給${CAT?esc(CAT.name):SP().n}</p>
     <div class="btns"><button class="btn ghost" data-act="rretry">重新作答</button><button class="btn" data-act="rback">下一篇</button></div></div>`
    :`<button class="btn" data-act="rsubmit" ${answered<p.qs.length?"disabled":""}>${answered<p.qs.length?`還有 ${p.qs.length-answered} 題未作答`:"交卷看解析"}</button>`}`;
 }
@@ -2400,8 +2439,11 @@ document.addEventListener("click",ev=>{
     case "tab": if(tab!==k){tab=k;store.set("es_tab2",tab);resetSession();petLine=null;window.scrollTo(0,0)} break;
     case "lang": {track=k==="en"?(TRACKS[lastEn]?lastEn:"gept"):k;store.set("es_track",track);tab=SECTIONS[k][0].k;store.set("es_tab2",tab);resetSession();window.scrollTo(0,0);break}
     case "track": track=k;lastEn=k;store.set("es_track",track);store.set("es_lastEn",k);resetSession(); break;
-    case "pet": {petLine=pick(PET_LINES[mood()]||PET_LINES.normal);render();const c=$(".catwrap");if(c)c.classList.add("hop");return}
+    case "pet": {petLine=pick(petLines(mood()));render();const c=$(".catwrap");if(c)c.classList.add("hop");return}
     case "adopt": doAdopt(); return;
+    case "pickSp": {const i=$("#catName");if(i&&i.value!==SPECIES[pendingSp].def)adoptNameDraft=i.value;pendingSp=k;keepScroll=true;break}
+    case "swapOpen": swapOpen=!swapOpen; keepScroll=true; break;
+    case "swapSp": CAT.sp=k; saveCat(); swapOpen=false; petLine=`${SPECIES[k].snd}～我換新造型了！`; keepScroll=true; break;
     case "rename": renaming=true; render(); const ri=$("#renameInp"); if(ri) ri.focus(); return;
     case "renameSave": doRename(); return;
     case "goal": GOALN=+k; store.set("es_goal",GOALN); toast(`每天的目標改成 ${GOALN} 題`); keepScroll=true; break;
