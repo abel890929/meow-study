@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="2026-11-15.2">
+<meta name="app-version" content="2026-11-15.3">
 <title>喵學堂：養寵物學語言</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
@@ -2119,7 +2119,7 @@ function render(){
   document.body.dataset.lang=lang();
   renderHeader(); renderNav();
   const sec=SECTIONS[lang()].find(x=>x.k===tab);
-  $("#main").innerHTML= tab==="cat"?renderHome(): sec.kind==="deck"?renderDeck(): sec.kind==="mcq"?renderGrammar(): renderReading();
+  $("#main").innerHTML= tab==="cat"?renderHome(): (!lvOf().placed||(PL&&PL.t===track))?renderPlacement(): sec.kind==="deck"?renderDeck(): sec.kind==="mcq"?renderGrammar(): renderReading();
   if(pendingFly){flyFish(pendingFly);pendingFly=0}
 }
 function flyFish(n){
@@ -2212,10 +2212,72 @@ function weakTopics(t){const tp=lvOf(t).tp;return Object.keys(tp).filter(k=>tp[k
 function levelCard(){
   const L=lvOf(),st=levelStats(track),need=Math.max(0,12-st.n);
   const msg=L.lv>=MAXLV?"已經是最高等級，繼續保持！":st.n<12?`本級再答 ${need} 題後，答對率達 80% 就升級`:`本級最近 12 題答對率 ${Math.round(st.acc*100)}%，達 80% 就升級`;
-  return `<div class="lvcard"><span class="lvbadge">Lv${L.lv}</span><div class="lvt"><div class="lvbar"><i style="width:${L.lv>=MAXLV?100:Math.min(100,st.n?st.acc/0.8*100*Math.min(1,st.n/12):0)}%"></i></div><div class="muted small">${msg}</div></div></div>`;
+  return `<div class="lvcard"><span class="lvbadge">Lv${L.lv}</span><div class="lvt"><div class="row between" style="margin-bottom:2px"><span class="small" style="font-weight:700">${(LV_DESC[lang()][L.lv-1]||"").split("：")[0]}</span><button class="chip" style="padding:2px 10px;font-size:.8rem" data-act="plRedo">重新測驗</button></div><div class="lvbar"><i style="width:${L.lv>=MAXLV?100:Math.min(100,st.n?st.acc/0.8*100*Math.min(1,st.n/12):0)}%"></i></div><div class="muted small">${msg}</div></div></div>`;
 }
 function weightedPick(items,wfn,n){const pool=items.map(x=>({x,w:wfn(x)})).filter(o=>o.w>0),out=[];
   while(out.length<n&&pool.length){const tot=pool.reduce((a,o)=>a+o.w,0);let r=Math.random()*tot,i=0;for(;i<pool.length;i++){r-=pool[i].w;if(r<=0)break}out.push(pool.splice(Math.min(i,pool.length-1),1)[0].x)}return out}
+
+/* ===================== PLACEMENT TEST ===================== */
+let PL=null;
+const LV_DESC={
+  en:["基礎：國中程度的單字和文法","初中級：能讀懂簡單的短文","中級：大約全民英檢中級的程度","中高級：能應付大部分考試題型","高級：可以挑戰最難的題目"],
+  ja:["入門：從假名和招呼語開始","初級：會基本句子和助詞","初中級：能說簡單的日常對話","中級：懂規則、經驗、比較的說法","中高級：能表達想法和推測"],
+  ko:["入門：從字母和招呼語開始","初級：會基本句子和助詞","初中級：能說簡單的日常對話","中級：懂條件、經驗、比較的說法","中高級：能表達想法和推測"]};
+function vocabQ(t,it,items){const opts=shuffle([it,...shuffle(items.filter(x=>x.w!==it.w&&x.m!==it.m)).slice(0,3)]);
+  return {kind:"v",pr:"這個字是什麼意思？",big:it.w,sub:it.p&&lang()!=="en"?it.p:(it.p||""),opts:opts.map(o=>o.m),a:opts.indexOf(it)}}
+function buildPlacement(t){
+  const tr=TRACKS[t], items=tr.decks.vocab.items, out=[];
+  for(let L=1;L<=MAXLV;L++){
+    const qs=[];
+    if(L===1&&tr.decks.letters){const li=tr.decks.letters.items,it=pick(li),opts=shuffle([it,...shuffle(li.filter(x=>x.m!==it.m)).slice(0,3)]);
+      qs.push({kind:"l",pr:tr.decks.letters.qA,big:it.w,sub:"",opts:opts.map(o=>o.m),a:opts.indexOf(it)})}
+    const gs=shuffle(tr.grammar.filter(q=>(q.lv||1)===L)).slice(0,lang()==="en"?1:2).map(q=>{const order=shuffle(q.o.map((_,i)=>i));return {kind:"g",pr:q.q,big:"",sub:q.t,opts:order.map(i=>q.o[i]),a:order.indexOf(q.a)}});
+    qs.push(...gs);
+    const tier=items.filter(x=>wordTier(t,x.w)===L);
+    shuffle(tier).slice(0,3-qs.length).forEach(it=>qs.push(vocabQ(t,it,items)));
+    out.push(shuffle(qs).map(q=>Object.assign(q,{lv:L})));
+  }
+  return out;
+}
+function startPlacement(){PL={t:track,lvls:buildPlacement(track),L:1,i:0,picked:null,res:{},done:false,result:1};window.scrollTo(0,0)}
+function finishPlacement(result){
+  const L=lvOf(PL.t);L.lv=result;L.placed=today();L.h.push({o:1,l:0,mark:1});saveLV();
+  const S=SR[PL.t];if(S&&result>=2){const minT=result-1;S.u=S.u.filter(w=>{if(!S.c[w].s&&wordTier(PL.t,w)<minT){delete S.c[w];return false}return true});S.day="";saveSRS()}
+  PL.done=true;PL.result=result;
+}
+function skipPlacement(lv){track&&(PL={t:track});finishPlacement(lv);PL=null}
+function renderPlacement(){
+  const L=lvOf(), name=lang()==="en"?TRACKS[track].name:LANGS[lang()].name, desc=LV_DESC[lang()];
+  if(!PL||PL.t!==track){
+    const had=L.h.length>0;
+    return `<div class="card" style="text-align:center"><div class="big">📝</div><h2 style="margin-top:8px">先做個程度測驗吧！</h2>
+    <p class="muted">${name}：從 Lv1 往上考，每級 3 題，某一級答錯 2 題就結束。<br>零基礎的話大概 3 題就結束，程度好最多 15 題。<br>測完會從適合你的等級開始學，太簡單的內容會先跳過。</p>
+    <div class="btns" style="flex-direction:column"><button class="btn" data-act="plStart">開始測驗</button>
+    <button class="btn ghost" data-act="plSkip" data-k="1">${lang()==="en"?"直接從 Lv1 開始":"我是零基礎，從 Lv1 開始"}</button>
+    ${had?`<button class="btn ghost" data-act="plSkip" data-k="${L.lv}">不用測驗，維持目前的 Lv${L.lv}</button>`:""}</div></div>`;
+  }
+  if(PL.done){const r=PL.result;
+    return `<div class="card" style="text-align:center"><div class="muted">${name}程度測驗結果</div><div class="big">Lv${r}</div><p style="font-weight:700;margin:6px 0">${desc[r-1]}</p>
+    <div style="text-align:left;margin-top:12px">${Object.keys(PL.res).map(l=>{const a=PL.res[l],ok=a.filter(Boolean).length;return `<div class="row between small" style="padding:6px 0;border-top:1px solid var(--line)"><span>Lv${l}</span><span class="${ok>=2?"":"muted"}">答對 ${ok} / ${a.length} ${ok>=2?"✓ 通過":"✗"}</span></div>`}).join("")}</div>
+    <p class="muted small">之後會依照你的答題表現自動升級或降級。想重測的話，可以按等級卡片上的「重新測驗」。</p>
+    <button class="btn" data-act="plDone">開始學習</button></div>`;}
+  const lvQs=PL.lvls[PL.L-1], q=lvQs[PL.i], ans=PL.picked!==null, total=PL.lvls.reduce((a,x)=>a+x.length,0), doneN=PL.lvls.slice(0,PL.L-1).reduce((a,x)=>a+x.length,0)+PL.i;
+  const opts=q.opts.map((o,k)=>{let c="";if(ans){if(k===q.a)c="right";else if(k===PL.picked)c="wrong"}return `<button class="opt fx ${c}" data-act="plPick" data-k="${k}" ${ans?"disabled":""}>${o}</button>`}).join("");
+  return `<div class="row between muted small"><span>程度測驗 · <span class="pill">Lv${PL.L} 關卡</span></span><span>第 ${PL.i+1} / ${lvQs.length} 題</span></div>
+  <div class="bar"><i style="width:${doneN/total*100}%"></i></div>
+  <div class="card">${q.big?`<div class="muted small">${q.pr}</div><div class="q fx big">${q.big}${q.sub&&q.kind==="v"?` <span class="muted small">${q.sub}</span>`:""}</div>`:`<div class="q fx">${q.pr.replace("___","<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>")}</div>`}${opts}
+  ${ans?`<div class="btns"><button class="btn" data-act="plNext">下一題</button></div>`:`<p class="muted small" style="text-align:center;margin:6px 0 0">不會的話就猜一個，測驗不會影響寵物。</p>`}</div>`;
+}
+function plNext(){
+  const lvQs=PL.lvls[PL.L-1];PL.i++;PL.picked=null;
+  if(PL.i>=lvQs.length){const ok=(PL.res[PL.L]||[]).filter(Boolean).length;
+    if(ok<2){finishPlacement(Math.max(1,PL.L-1));return}
+    if(PL.L>=MAXLV){finishPlacement(MAXLV);return}
+    PL.L++;PL.i=0;
+    while(PL.L<=MAXLV&&!PL.lvls[PL.L-1].length)PL.L++;
+    if(PL.L>MAXLV)finishPlacement(MAXLV);
+  }
+}
 
 /* ===================== SPACED REPETITION (vocab) ===================== */
 function saveSRS(){store.set("es_srs",SR)}
@@ -2446,6 +2508,12 @@ document.addEventListener("click",ev=>{
     case "adopt": doAdopt(); return;
     case "pickSp": {const i=$("#catName");if(i&&i.value!==SPECIES[pendingSp].def)adoptNameDraft=i.value;pendingSp=k;keepScroll=true;break}
     case "rehome": if(!rehomeArmed){rehomeArmed=true;keepScroll=true}else{CATS.push({name:CAT.name,ic:SP().ic,days:daysBetween(CAT.born,today())+1,food:CAT.food,unit:foodN(),stage:stName(stageOf(CAT.food)),rehomed:true});pendingSp=CAT.sp||"cat";CAT=null;saveCat();rehomeArmed=false;swapOpen=false;window.scrollTo(0,0);toast("🏡 牠到新家了，會過得很好！現在可以領養新寵物")} break;
+    case "plStart": startPlacement(); break;
+    case "plSkip": skipPlacement(+k); resetSession(); toast(`從 Lv${k} 開始學習！`); break;
+    case "plPick": {const q=PL.lvls[PL.L-1][PL.i];PL.picked=+k;(PL.res[PL.L]=PL.res[PL.L]||[]).push(+k===q.a);keepScroll=true;break}
+    case "plNext": plNext(); break;
+    case "plDone": PL=null; resetSession(); window.scrollTo(0,0); break;
+    case "plRedo": lvOf().placed=null; saveLV(); PL=null; window.scrollTo(0,0); break;
     case "swapOpen": swapOpen=!swapOpen; keepScroll=true; break;
     case "swapSp": CAT.sp=k; saveCat(); swapOpen=false; petLine=`${SPECIES[k].snd}～我換新造型了！`; keepScroll=true; break;
     case "rename": renaming=true; render(); const ri=$("#renameInp"); if(ri) ri.focus(); return;
