@@ -2426,7 +2426,7 @@ function toggleTimer(){
 
 /* ===================== EVENTS ===================== */
 function resetSession(){V={mode:"cards",smode:"today",sess:null,order:null,i:0,flip:false,quiz:null};G=null;R={open:null,ans:{},done:false,roma:false,zh:false}}
-function doAdopt(){const i=$("#catName");adopt(i?i.value.trim():"");render();const c=$(".catwrap");if(c)c.classList.add("hop");toast("🐾 歡迎回家！")}
+function doAdopt(){const i=$("#catName");adopt(i?i.value.trim():"");render();window.scrollTo(0,0);const c=$(".catwrap");if(c)c.classList.add("hop");toast("🐾 歡迎回家！")}
 function doRename(){const i=$("#renameInp");if(i&&i.value.trim()){CAT.name=i.value.trim().slice(0,10);saveCat()}renaming=false;render()}
 document.addEventListener("keydown",e=>{if(e.key!=="Enter")return;if(e.target.id==="catName")doAdopt();if(e.target.id==="renameInp")doRename()});
 document.addEventListener("click",ev=>{
